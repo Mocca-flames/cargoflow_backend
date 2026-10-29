@@ -23,6 +23,9 @@ class Settings(BaseSettings):
         'image/png': ['.png'],
     }
 
+    ENVIRONMENT: str = 'production'
+    SKIP_OTP: bool = False
+
 
 settings = Settings()
 

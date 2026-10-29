@@ -71,6 +71,14 @@ def login(db: Session, email: str, password: str, mailer: BrevoMailer,
 
     db.commit()
 
+    if getattr(settings, "SKIP_OTP", False):
+        user.last_login_at = now
+        db.commit()
+        return TokenOut(
+            access_token=create_token(user.id, "access", settings.ACCESS_TOKEN_EXPIRE_MINUTES, version=user.token_version),
+            refresh_token=create_token(user.id, "refresh", settings.REFRESH_TOKEN_EXPIRE_MINUTES, version=user.token_version),
+        )
+
     code = issue_otp(db, user.email, "login", user.id)
     send_otp_email(mailer, user.email, code, "login")
     return None

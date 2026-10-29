@@ -10,6 +10,8 @@ from app.features.companies import models as companies_models  # noqa: F401
 from app.features.otp import models as otp_models  # noqa: F401
 import app.features.auth.models  # noqa: F401
 import app.features.documents.models  # noqa: F401
+import app.features.trucks.models  # noqa: F401
+import app.features.availability.models  # noqa: F401
 
 config = context.config
 config.set_main_option('sqlalchemy.url', settings.DATABASE_URL)

@@ -7,6 +7,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
+import app.features.trucks.models  # noqa: F401  (resolves the trucks FK)
 
 # Plain strings, not PG enums, so adding values later needs no painful migration.
 APPLIES_TO = ("transporter", "broker", "truck")
@@ -51,7 +52,7 @@ class CompanyDocument(Base):
     )  # null = "Other"
     custom_label: Mapped[str | None] = mapped_column(String(150))  # used when document_type_id is null
     custom_label_norm: Mapped[str | None] = mapped_column(String(150), index=True)  # lowercased, for the suggestions list
-    truck_id: Mapped[int | None] = mapped_column(Integer, index=True)  # FK added in Step 6, when trucks exists
+    truck_id: Mapped[int | None] = mapped_column(ForeignKey("trucks.id", ondelete="CASCADE"), index=True)
     file_path: Mapped[str] = mapped_column(String(500))  # random name on disk
     original_filename: Mapped[str] = mapped_column(String(255))
     content_type: Mapped[str] = mapped_column(String(100))
