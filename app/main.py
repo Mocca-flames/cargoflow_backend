@@ -10,6 +10,7 @@ from app.features.document_types.router import router as document_types_router
 from app.features.trucks.router import router as trucks_router
 from app.features.availability.router import router as availability_router
 from app.features.loads.router import router as loads_router, public_router as public_loads_router
+from app.features.load_interests.router import router as interests_router, public_router as public_interests_router
 
 
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -27,6 +28,8 @@ app.include_router(trucks_router)
 app.include_router(availability_router)
 app.include_router(loads_router)
 app.include_router(public_loads_router)
+app.include_router(interests_router)
+app.include_router(public_interests_router)
 
 
 @app.get("/")

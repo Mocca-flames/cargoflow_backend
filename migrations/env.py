@@ -13,6 +13,7 @@ import app.features.documents.models  # noqa: F401
 import app.features.trucks.models  # noqa: F401
 import app.features.availability.models  # noqa: F401
 import app.features.loads.models  # noqa: F401
+import app.features.load_interests.models  # noqa: F401
 
 config = context.config
 config.set_main_option('sqlalchemy.url', settings.DATABASE_URL)
