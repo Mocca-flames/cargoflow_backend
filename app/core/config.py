@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = 'production'
     SKIP_OTP: bool = False
 
+    # Comma-separated browser origins allowed to call the API
+    CORS_ORIGINS: str = 'http://localhost:3000'
+
 
 settings = Settings()
 
