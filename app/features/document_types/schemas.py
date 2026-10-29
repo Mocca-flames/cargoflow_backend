@@ -49,3 +49,10 @@ class DocumentTypeUpdate(BaseModel):
     requires_expiry: bool | None = None
     is_active: bool | None = None
     sort_order: int | None = None
+
+
+class SuggestedTypeOut(BaseModel):
+    label_norm: str
+    label: str
+    companies: int
+    documents: int

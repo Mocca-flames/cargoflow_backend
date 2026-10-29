@@ -1,9 +1,9 @@
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.features.document_types.schemas import DocumentTypeCreate, DocumentTypeUpdate
-from app.features.documents.models import DocumentType
+from app.features.documents.models import CompanyDocument, DocumentType
 from app.features.users.model import User
 
 
@@ -41,3 +41,28 @@ def update_type(db: Session, type_id: int, body: DocumentTypeUpdate) -> Document
     db.commit()
     db.refresh(dt)
     return dt
+
+
+def suggested_types(db: Session, min_companies: int, limit: int) -> list[dict]:
+    n_companies = func.count(func.distinct(CompanyDocument.company_id))
+    rows = db.execute(
+        select(
+            CompanyDocument.custom_label_norm,
+            func.max(CompanyDocument.custom_label),
+            n_companies,
+            func.count(CompanyDocument.id),
+        )
+        .where(
+            CompanyDocument.document_type_id.is_(None),
+            CompanyDocument.custom_label_norm.is_not(None),
+            CompanyDocument.status != "superseded",
+        )
+        .group_by(CompanyDocument.custom_label_norm)
+        .having(n_companies >= min_companies)
+        .order_by(n_companies.desc(), func.count(CompanyDocument.id).desc())
+        .limit(limit)
+    ).all()
+    return [
+        {"label_norm": norm, "label": label, "companies": companies, "documents": docs}
+        for norm, label, companies, docs in rows
+    ]

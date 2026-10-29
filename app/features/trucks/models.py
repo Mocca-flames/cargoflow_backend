@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, validates
 from app.core.database import Base
 
 # Plain strings, not PG enums.
-TRUCK_TYPES = ("flatbed", "tautliner", "tipper", "tanker", "refrigerated", "container", "side_tipper", "other")
+TRUCK_TYPES = ("superlink", "flatbed", "tautliner", "tipper", "tanker", "refrigerated", "container", "side_tipper", "other")
 
 
 class Truck(Base):
