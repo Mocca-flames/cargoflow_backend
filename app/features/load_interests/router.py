@@ -3,8 +3,11 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_role
+from app.core.email import BrevoMailer, get_mailer
+from app.features.onboarding.schemas import OnboardingOut
 from app.features.load_interests import service
 from app.features.load_interests.schemas import (
+    ConvertLeadIn,
     InterestCreate,
     InterestOut,
     InterestReceived,
@@ -45,3 +48,14 @@ def update_interest(
     admin: User = Depends(require_role("admin", "director")),
 ):
     return service.update_interest(db, interest_id, body, admin)
+
+
+@router.post("/{interest_id}/convert", response_model=OnboardingOut, status_code=201)
+def convert_interest(
+    interest_id: int,
+    body: ConvertLeadIn,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role("admin", "director")),
+    mailer: BrevoMailer = Depends(get_mailer),
+):
+    return service.convert_interest(db, interest_id, body, admin, mailer)

@@ -7,12 +7,16 @@ from sqlalchemy.orm import Session
 
 from app.features.load_interests.models import LoadInterest
 from app.features.load_interests.schemas import (
+    ConvertLeadIn,
     InterestCreate,
     InterestOut,
     InterestReceived,
     InterestUpdate,
 )
 from app.features.loads.models import Load
+from app.core.email import BrevoMailer
+from app.features.onboarding.schemas import OnboardingOut, OwnerIn, StaffOnboardingIn
+from app.features.onboarding.service import staff_submit
 from app.features.users.model import User
 
 
@@ -30,6 +34,7 @@ def _out(interest: LoadInterest, load: Load) -> InterestOut:
         phone=interest.phone,
         truck_type=interest.truck_type,
         status=interest.status,
+        company_id=interest.company_id,
         note=interest.note,
         created_at=interest.created_at,
         handled_at=interest.handled_at,
@@ -94,3 +99,31 @@ def update_interest(db: Session, interest_id: int, body: InterestUpdate, admin: 
     db.commit()
     db.refresh(interest)
     return _out(interest, db.get(Load, interest.load_id))
+
+
+def convert_interest(
+    db: Session, interest_id: int, body: ConvertLeadIn, admin: User, mailer: BrevoMailer
+) -> OnboardingOut:
+    lead = db.get(LoadInterest, interest_id)
+    if not lead:
+        raise HTTPException(404, "Interest not found.")
+    if lead.status == "onboarded" or lead.company_id is not None:
+        raise HTTPException(409, "This lead has already been onboarded.")
+    owner = None
+    if body.create_owner:
+        owner = OwnerIn(full_name=lead.full_name, email=body.owner_email, phone=lead.phone)
+    staff_body = StaffOnboardingIn(
+        company=body.company,
+        roles=body.roles,
+        transporter=body.transporter,
+        broker=body.broker,
+        owner=owner,
+        create_owner=body.create_owner,
+    )
+    result = staff_submit(db, staff_body, admin, mailer)
+    lead.company_id = result.company_id
+    lead.status = "onboarded"
+    lead.handled_by = admin.id
+    lead.handled_at = datetime.now(timezone.utc)
+    db.commit()
+    return result

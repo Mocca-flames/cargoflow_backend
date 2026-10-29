@@ -1,8 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.core.normalize_phone import normalize_phone
+from app.features.onboarding.schemas import CompanyOnboardingBase
 from app.features.load_interests.models import INTEREST_STATUSES
 from app.features.trucks.models import TRUCK_TYPES
 
@@ -71,6 +72,23 @@ class InterestOut(BaseModel):
     phone: str
     truck_type: str | None
     status: str
+    company_id: int | None
     note: str | None
     created_at: datetime
     handled_at: datetime | None
+
+
+class ConvertLeadIn(CompanyOnboardingBase):
+    create_owner: bool = False
+    owner_email: EmailStr | None = None
+
+    @field_validator("owner_email")
+    @classmethod
+    def _lower_owner_email(cls, v: EmailStr | None) -> str | None:
+        return None if v is None else str(v).strip().lower()
+
+    @model_validator(mode="after")
+    def _owner_email_required(self):
+        if self.create_owner and not self.owner_email:
+            raise ValueError("owner_email required when create_owner is True")
+        return self
