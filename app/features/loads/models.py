@@ -23,7 +23,7 @@ class Load(Base):
     trucks_needed: Mapped[int] = mapped_column(Integer)
     rate: Mapped[Decimal] = mapped_column(Numeric(12, 2))  # per truck
     currency: Mapped[str] = mapped_column(String(3), default="USD", server_default="USD")
-    payment_terms: Mapped[str | None] = mapped_column(String(20))
+    payment_terms: Mapped[str | None] = mapped_column(String(100))
     pickup_date: Mapped[date | None] = mapped_column(Date, index=True)
     status: Mapped[str] = mapped_column(String(20), default="open", server_default="open", index=True)
     note: Mapped[str | None] = mapped_column(Text)

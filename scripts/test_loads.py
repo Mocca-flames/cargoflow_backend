@@ -83,12 +83,17 @@ if id2:
     check("forward-only has_backload false", b["has_backload"] is False, b.get("has_backload"))
     check("ZAR kept", b["currency"] == "ZAR", b["currency"])
 
+s, b = call("POST", "/loads", DIRECTOR, {**forward, "payment_terms": "  70/30 on loading  "})
+check("custom payment terms stored trimmed", s == 201 and b["payment_terms"] == "70/30 on loading", (s, b))
+s, b = call("POST", "/loads", DIRECTOR, {**forward, "payment_terms": "   "})
+check("blank payment terms -> null", s == 201 and b["payment_terms"] is None, (s, b))
+
 print("--- director: validation")
 for name, patch in [
     ("backload rate without route -> 422", {"backload_rate": 500}),
     ("currency EUR -> 422", {"currency": "EUR"}),
     ("bad truck_type -> 422", {"truck_type": "spaceship"}),
-    ("bad payment_terms -> 422", {"payment_terms": "whenever"}),
+    ("payment_terms over 100 chars -> 422", {"payment_terms": "x" * 101}),
     ("past pickup_date -> 422", {"pickup_date": yesterday}),
     ("rate 0 -> 422", {"rate": 0}),
     ("trucks_needed 0 -> 422", {"trucks_needed": 0}),

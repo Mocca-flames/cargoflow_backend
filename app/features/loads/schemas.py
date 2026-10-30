@@ -18,6 +18,17 @@ def _one_of(value: str | None, allowed: tuple[str, ...], name: str, upper: bool 
     return value
 
 
+def _free_text(value: str | None, name: str, max_len: int = 100) -> str | None:
+    if value is None:
+        return None
+    value = value.strip()
+    if not value:
+        return None
+    if len(value) > max_len:
+        raise ValueError(f"{name} must be at most {max_len} characters")
+    return value
+
+
 class LoadCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -52,7 +63,7 @@ class LoadCreate(BaseModel):
     @field_validator("payment_terms")
     @classmethod
     def _terms(cls, v):
-        return _one_of(v, PAYMENT_TERMS, "payment_terms")
+        return _free_text(v, "payment_terms")
 
     @field_validator("pickup_date")
     @classmethod
@@ -87,7 +98,7 @@ class LoadUpdate(BaseModel):
     @field_validator("payment_terms")
     @classmethod
     def _terms(cls, v):
-        return _one_of(v, PAYMENT_TERMS, "payment_terms")
+        return _free_text(v, "payment_terms")
 
 
 class LoadOut(BaseModel):
