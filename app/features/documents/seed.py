@@ -13,7 +13,7 @@ SEED = [
     ("sars_tax_clearance", "SARS tax compliance status / clearance", "tax_clearance", "transporter", "SARS", True, 20),
     ("goods_in_transit_insurance", "Goods-in-transit insurance certificate", "insurance", "transporter", None, True, 30),
     ("cross_border_permit", "Cross-border road transport permit", "cross_border_permit", "transporter", None, True, 40),
-    ("director_id", "Director ID document", "director_id", "transporter", "Department of Home Affairs", True, 50),
+    ("director_id", "Director ID document", "director_id", "transporter", "Department of Home Affairs", False, 50),
     ("bank_confirmation_letter", "Bank confirmation letter", "bank_confirmation", "transporter", None, False, 60),
     # Broker
     ("cipc_registration", "CIPC company registration", "company_registration", "broker", "CIPC", False, 10),
