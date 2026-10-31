@@ -40,6 +40,10 @@ class MeOut(BaseModel):
     staff_role: str
     company_id: int | None
     must_change_password: bool
+    company_name: str | None = None
+    company_country_code: str | None = None
+    company_status: str | None = None
+    company_rejection_reason: str | None = None
     model_config = ConfigDict(from_attributes=True)
 
 
