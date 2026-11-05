@@ -16,7 +16,6 @@ from app.features.load_interests.router import router as interests_router, publi
 
 app = FastAPI(title=settings.PROJECT_NAME)
 app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 if settings.SKIP_OTP and settings.ENVIRONMENT.lower() != "development":
     raise RuntimeError("SKIP_OTP is only allowed when ENVIRONMENT=development")
