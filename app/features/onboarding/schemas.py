@@ -141,7 +141,7 @@ class CompanyOnboardingBase(BaseModel):
 
 
 class OnboardingSubmitIn(CompanyOnboardingBase):
-    code: str = Field(min_length=6, max_length=6)
+    token: str = Field(min_length=20)
     password: str = Field(min_length=8)
     owner: OwnerIn
 
@@ -163,3 +163,17 @@ class OnboardingOut(BaseModel):
     roles: list[str]
     owner_user_id: int | None = None
     message: str
+
+
+class OnboardingVerifyIn(BaseModel):
+    email: EmailStr
+    code: str = Field(pattern=r"^\d{6}$")
+
+    @field_validator("email")
+    @classmethod
+    def lower_email(cls, v: EmailStr) -> str:
+        return str(v).strip().lower()
+
+
+class OnboardingVerifyOut(BaseModel):
+    token: str

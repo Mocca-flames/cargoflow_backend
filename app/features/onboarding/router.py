@@ -7,7 +7,14 @@ from app.features.users.model import User
 from app.core.email import BrevoMailer, get_mailer
 from app.features.auth.schemas import MessageOut
 from app.features.onboarding import service
-from app.features.onboarding.schemas import OnboardingOut, OnboardingStartIn, OnboardingSubmitIn, StaffOnboardingIn
+from app.features.onboarding.schemas import (
+    OnboardingOut,
+    OnboardingStartIn,
+    OnboardingSubmitIn,
+    OnboardingVerifyIn,
+    OnboardingVerifyOut,
+    StaffOnboardingIn,
+)
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 
@@ -35,3 +42,8 @@ def staff_submit(
     mailer: BrevoMailer = Depends(get_mailer),
 ):
     return service.staff_submit(db, body, creator, mailer)
+
+
+@router.post("/verify-code", response_model=OnboardingVerifyOut)
+def verify_code(body: OnboardingVerifyIn, db: Session = Depends(get_db)):
+    return OnboardingVerifyOut(token=service.verify_code(db, body.email, body.code))

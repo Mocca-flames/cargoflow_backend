@@ -1,8 +1,12 @@
 import secrets
+from datetime import datetime, timedelta, timezone
+
+import jwt
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.email import BrevoMailer
 from app.features.otp.service import issue_otp, send_otp_email
 from app.features.users.model import User
@@ -39,7 +43,7 @@ def submit(db: Session, body: OnboardingSubmitIn) -> OnboardingOut:
     )):
         raise HTTPException(409, "A company with this registration number already exists. Please contact support.")
 
-    if not verify_otp(db, owner.email, PURPOSE, body.code):
+    if not _token_ok(body.token, owner.email):
         raise HTTPException(400, "Invalid or expired code.")
 
     try:
@@ -149,3 +153,22 @@ def staff_submit(db: Session, body: StaffOnboardingIn, creator: User, mailer: Br
         owner_user_id=user.id if user else None,
         message="Company created and pending verification.",
     )
+
+
+def _token_ok(token: str, email: str) -> bool:
+    try:
+        data = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+    except jwt.PyJWTError:
+        return False
+    return data.get("type") == "onboarding" and data.get("sub") == email
+
+
+def verify_code(db: Session, email: str, code: str) -> str:
+    if not verify_otp(db, email, PURPOSE, code):
+        raise HTTPException(400, "Invalid or expired code.")
+    payload = {
+        "sub": email,
+        "type": "onboarding",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=2),
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
