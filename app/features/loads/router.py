@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -50,6 +50,16 @@ def update_load(
     user: User = Depends(get_active_user),
 ):
     return service.update_load(db, load_id, body, user)
+
+
+@router.delete("/{load_id}", status_code=204)
+def delete_load(
+    load_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_active_user),
+):
+    service.delete_load(db, load_id, user)
+    return Response(status_code=204)
 
 
 # Public board: no login, open loads only, no contact or company details.

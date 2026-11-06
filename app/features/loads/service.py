@@ -78,6 +78,14 @@ def update_load(db: Session, load_id: int, body: LoadUpdate, user: User) -> Load
     return load
 
 
+def delete_load(db: Session, load_id: int, user: User) -> None:
+    load = get_load(db, load_id)
+    if not _is_staff(user) and (load.company_id is None or load.company_id != user.company_id):
+        raise HTTPException(404, "Load not found.")
+    db.delete(load)
+    db.commit()
+
+
 def get_open_load(db: Session, load_id: int) -> Load:
     load = get_load(db, load_id)
     if load.status != "open":
