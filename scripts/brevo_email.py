@@ -15,7 +15,7 @@ headers = {
 
 payload = {
     "sender": {"name": "CargoFlow Africa", "email": "noreply@cargoflowafrica.co.za"},
-    "to": [{"email": "junior@apextransportgroup.co.za", "name": "Test User"}],
+    "to": [{"email": "juniorbypassfrp@gmail.com", "name": "Test User"}],
     "subject": "Brevo API Test",
     "htmlContent": "<html><body><h3>It works!</h3><p>Your Brevo API integration is successfully configured.</p></body></html>",
 }
