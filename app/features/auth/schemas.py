@@ -45,6 +45,11 @@ class MeOut(BaseModel):
     company_status: str | None = None
     company_rejection_reason: str | None = None
     company_roles: list[str] = []
+    company_address: str | None = None
+    company_city: str | None = None
+    client_premises_type: str | None = None
+    client_province: str | None = None
+    client_postal_code: str | None = None
     model_config = ConfigDict(from_attributes=True)
 
 

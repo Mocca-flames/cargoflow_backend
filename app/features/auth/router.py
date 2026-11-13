@@ -30,6 +30,7 @@ def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
         if user.company_id
         else []
     )
+    client_profile = company.client_profile if company else None
     return MeOut(
         id=user.id,
         email=user.email,
@@ -42,6 +43,11 @@ def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
         company_status=company.status if company else None,
         company_rejection_reason=company.rejection_reason if company else None,
         company_roles=company_roles,
+        company_address=company.address if company else None,
+        company_city=company.city if company else None,
+        client_premises_type=client_profile.premises_type if client_profile else None,
+        client_province=client_profile.province if client_profile else None,
+        client_postal_code=client_profile.postal_code if client_profile else None,
     )
 
 
