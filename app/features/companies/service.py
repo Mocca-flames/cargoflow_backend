@@ -8,6 +8,7 @@ from app.features.companies.models import Company
 from app.features.documents.models import CompanyDocument, DocumentType
 from app.features.users.model import User
 from app.features.companies.schemas import (
+    ClientProfileOut,
     CompanyDetailOut,
     CompanyDocSummary,
     CompanyListItem,
@@ -101,6 +102,7 @@ def get_company_detail(db: Session, company_id: int) -> CompanyDetailOut:
             selectinload(Company.roles),
             selectinload(Company.transporter_profile),
             selectinload(Company.broker_profile),
+            selectinload(Company.client_profile),
         )
         .where(Company.id == company_id)
     )
@@ -113,7 +115,7 @@ def get_company_detail(db: Session, company_id: int) -> CompanyDetailOut:
         .where(CompanyDocument.company_id == company.id, CompanyDocument.status != "superseded")
         .order_by(CompanyDocument.created_at.desc())
     ).all()
-    tp, bp = company.transporter_profile, company.broker_profile
+    tp, bp, cp = company.transporter_profile, company.broker_profile, company.client_profile
     return CompanyDetailOut(
         id=company.id,
         legal_name=company.legal_name,
@@ -135,6 +137,7 @@ def get_company_detail(db: Session, company_id: int) -> CompanyDetailOut:
         operating_countries=list(tp.operating_countries) if tp else None,
         corridors=list(bp.corridors) if bp else None,
         finds_trucks=bp.finds_trucks if bp else None,
+        client=ClientProfileOut.model_validate(cp) if cp else None,
         users=[CompanyUserOut.model_validate(u) for u in users],
         documents=[
             CompanyDocSummary(

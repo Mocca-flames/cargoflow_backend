@@ -183,7 +183,10 @@ def review_document(db: Session, reviewer: User, doc_id: int, decision: str, not
     if decision == "approved" and doc.truck_id is None:
         db.flush()
         company = company_service._get_company(db, doc.company_id)
-        if company.status == "unverified" and not company_service._missing_documents(db, company):
+        roles = {r.role for r in company.roles}
+        # Clients are never auto-verified by document approval; staff verify them
+        # explicitly via POST /companies/{id}/verify.
+        if "client" not in roles and company.status == "unverified" and not company_service._missing_documents(db, company):
             company.status = "verified"
             company.verified_at = datetime.now(timezone.utc)
             company.verified_by = reviewer.id

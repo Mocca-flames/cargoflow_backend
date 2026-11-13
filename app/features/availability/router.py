@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_active_user
 from app.features.availability import service
 from app.features.availability.schemas import AvailabilityCreate, AvailabilityOut
+from app.features.loads.service import client_scope
 from app.features.users.model import User
 
 router = APIRouter(prefix="/availability", tags=["availability"])
@@ -26,8 +27,12 @@ def list_board(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
-    _: User = Depends(get_active_user),
+    user: User = Depends(get_active_user),
 ):
+    # client_scope is non-None exactly for non-staff users whose company has the
+    # "client" role; staff, brokers, transporters and company-less users pass through.
+    if client_scope(db, user) is not None:
+        raise HTTPException(403, "Not available for client accounts.")
     return service.list_board(db, status, location, limit, offset)
 
 

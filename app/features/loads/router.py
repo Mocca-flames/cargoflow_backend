@@ -28,18 +28,18 @@ def list_loads(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
-    _: User = Depends(get_active_user),
+    user: User = Depends(get_active_user),
 ):
-    return service.list_loads(db, status, origin, destination, truck_type, limit, offset)
+    return service.list_loads(db, status, origin, destination, truck_type, limit, offset, company_id=service.client_scope(db, user))
 
 
 @router.get("/{load_id}", response_model=LoadOut)
 def get_load(
     load_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_active_user),
+    user: User = Depends(get_active_user),
 ):
-    return service.get_load(db, load_id)
+    return service.get_load_for_user(db, load_id, user)
 
 
 @router.patch("/{load_id}", response_model=LoadOut)

@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-AppliesTo = Literal["transporter", "broker", "truck"]
+AppliesTo = Literal["transporter", "broker", "truck", "client"]
 
 
 class DocumentTypeOut(BaseModel):

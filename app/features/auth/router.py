@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.features.auth.schemas import ForgotPasswordIn, ResetPasswordIn
 
@@ -8,7 +9,7 @@ from app.core.email import BrevoMailer, get_mailer
 from app.features.auth import service
 from app.features.auth.schemas import MeOut, LoginIn, MessageOut, TokenOut, VerifyOtpIn, LoginOut, RefreshIn, ChangePasswordIn
 from app.features.users.model import User
-from app.features.companies.models import Company
+from app.features.companies.models import Company, CompanyRole
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
@@ -24,6 +25,11 @@ def login(body: LoginIn, db: Session = Depends(get_db), mailer: BrevoMailer = De
 @router.get('/me', response_model=MeOut)
 def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     company = db.get(Company, user.company_id) if user.company_id else None
+    company_roles = (
+        list(db.scalars(select(CompanyRole.role).where(CompanyRole.company_id == user.company_id)).all())
+        if user.company_id
+        else []
+    )
     return MeOut(
         id=user.id,
         email=user.email,
@@ -35,6 +41,7 @@ def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
         company_country_code=company.country_code if company else None,
         company_status=company.status if company else None,
         company_rejection_reason=company.rejection_reason if company else None,
+        company_roles=company_roles,
     )
 
 

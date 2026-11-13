@@ -12,7 +12,7 @@ from app.features.otp.service import issue_otp, send_otp_email
 from app.features.users.model import User
 from sqlalchemy.exc import IntegrityError
 from app.core.security import hash_password
-from app.features.companies.models import BrokerProfile, Company, CompanyRole, TransporterProfile
+from app.features.companies.models import BrokerProfile, ClientProfile, Company, CompanyRole, TransporterProfile
 from app.features.onboarding.schemas import CompanyOnboardingBase, OnboardingOut, OnboardingSubmitIn, StaffOnboardingIn
 from app.features.otp.service import verify_otp
 
@@ -80,6 +80,9 @@ def _add_company(db: Session, body: CompanyOnboardingBase) -> Company:
         country_code=c.country_code,
         phone=c.phone,
     )
+    if body.client:
+        company.address = body.client.street_address
+        company.city = body.client.city
     db.add(company)
     db.flush()
     for role in body.roles:
@@ -94,6 +97,15 @@ def _add_company(db: Session, body: CompanyOnboardingBase) -> Company:
             company_id=company.id,
             corridors=body.broker.corridors,
             finds_trucks=body.broker.finds_trucks,
+        ))
+    if body.client:
+        db.add(ClientProfile(
+            company_id=company.id,
+            premises_type=body.client.premises_type,
+            goods_description=body.client.goods_description,
+            province=body.client.province,
+            postal_code=body.client.postal_code,
+            owns_goods_declared_at=datetime.now(timezone.utc),
         ))
     return company
 

@@ -11,7 +11,7 @@ from app.core.database import Base
 
 # Plain strings (not Postgres enums) so adding values later needs no painful migration.
 COMPANY_STATUSES = ("unverified", "verified", "rejected", "suspended")
-COMPANY_ROLES = ("transporter", "broker")  # "client" comes in phase 2
+COMPANY_ROLES = ("transporter", "broker", "client")
 
 
 class Company(Base):
@@ -49,6 +49,9 @@ class Company(Base):
         back_populates="company", uselist=False, cascade="all, delete-orphan"
     )
     broker_profile: Mapped["BrokerProfile | None"] = relationship(
+        back_populates="company", uselist=False, cascade="all, delete-orphan"
+    )
+    client_profile: Mapped["ClientProfile | None"] = relationship(
         back_populates="company", uselist=False, cascade="all, delete-orphan"
     )
 
@@ -92,3 +95,16 @@ class BrokerProfile(Base):
     notes: Mapped[str | None] = mapped_column(Text)
 
     company: Mapped[Company] = relationship(back_populates="broker_profile")
+
+
+class ClientProfile(Base):
+    __tablename__ = "client_profiles"
+
+    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id", ondelete="CASCADE"), primary_key=True)
+    premises_type: Mapped[str] = mapped_column(String(20))
+    goods_description: Mapped[str] = mapped_column(Text)
+    province: Mapped[str | None] = mapped_column(String(100))
+    postal_code: Mapped[str | None] = mapped_column(String(20))
+    owns_goods_declared_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    company: Mapped[Company] = relationship(back_populates="client_profile")

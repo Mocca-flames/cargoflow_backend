@@ -25,6 +25,15 @@ SEED = [
     ("vehicle_licence", "Vehicle licence disc / registration", "vehicle_licence", "truck", None, True, 10),
 ]
 
+# Client proof documents: country_code=None means they apply to every country.
+# (code, name, category, applies_to, issuing_authority, requires_expiry, sort_order)
+CLIENT_SEED = [
+    ("business_registration", "Business registration certificate", "company_registration", "client", None, False, 10),
+    ("proof_of_address", "Proof of premises address (utility bill or lease, under 3 months old)", "proof_of_address", "client", None, False, 20),
+    ("proof_of_goods", "Proof of goods (recent invoice, purchase order or stock sheet)", "proof_of_goods", "client", None, False, 30),
+    ("director_id", "Director ID document", "director_id", "client", None, False, 40),
+]
+
 
 def seed_document_types(db: Session) -> int:
     created = 0
@@ -41,6 +50,24 @@ def seed_document_types(db: Session) -> int:
         db.add(DocumentType(
             code=code, name=name, category=category, applies_to=applies_to,
             country_code=ZA, issuing_authority=authority,
+            is_required=True, requires_expiry=expiry, sort_order=order,
+        ))
+        created += 1
+    for code, name, category, applies_to, authority, expiry, order in CLIENT_SEED:
+        # Postgres treats NULLs as distinct in the unique constraint, so the
+        # idempotency guard for country-wide types must be an explicit IS NULL check.
+        exists = db.scalar(
+            select(DocumentType.id).where(
+                DocumentType.code == code,
+                DocumentType.country_code.is_(None),
+                DocumentType.applies_to == applies_to,
+            )
+        )
+        if exists:
+            continue
+        db.add(DocumentType(
+            code=code, name=name, category=category, applies_to=applies_to,
+            country_code=None, issuing_authority=authority,
             is_required=True, requires_expiry=expiry, sort_order=order,
         ))
         created += 1

@@ -10,7 +10,7 @@ from app.core.database import Base
 import app.features.trucks.models  # noqa: F401  (resolves the trucks FK)
 
 # Plain strings, not PG enums, so adding values later needs no painful migration.
-APPLIES_TO = ("transporter", "broker", "truck")
+APPLIES_TO = ("transporter", "broker", "truck", "client")
 DOC_STATUSES = ("pending", "approved", "rejected", "superseded")
 
 

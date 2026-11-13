@@ -44,6 +44,7 @@ class MeOut(BaseModel):
     company_country_code: str | None = None
     company_status: str | None = None
     company_rejection_reason: str | None = None
+    company_roles: list[str] = []
     model_config = ConfigDict(from_attributes=True)
 
 

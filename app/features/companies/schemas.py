@@ -52,6 +52,16 @@ class CompanyDocSummary(BaseModel):
     created_at: datetime
 
 
+class ClientProfileOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    premises_type: str
+    goods_description: str
+    province: str | None
+    postal_code: str | None
+    owns_goods_declared_at: datetime
+
+
 class CompanyDetailOut(BaseModel):
     id: int
     legal_name: str
@@ -73,6 +83,7 @@ class CompanyDetailOut(BaseModel):
     operating_countries: list[str] | None
     corridors: list[str] | None
     finds_trucks: bool | None
+    client: ClientProfileOut | None = None
     users: list[CompanyUserOut]
     documents: list[CompanyDocSummary]
     missing_documents: list[str]

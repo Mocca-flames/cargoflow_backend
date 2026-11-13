@@ -121,6 +121,7 @@ class LoadOut(BaseModel):
     backload_commodity: str | None
     backload_rate: Money | None
     company_id: int | None
+    posted_as: str | None
     created_at: datetime
 
     @computed_field
@@ -146,6 +147,7 @@ class PublicLoadOut(BaseModel):
     backload_destination: str | None
     backload_commodity: str | None
     backload_rate: Money | None
+    posted_as: str | None
     created_at: datetime
 
     @computed_field

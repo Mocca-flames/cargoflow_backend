@@ -102,6 +102,30 @@ class BrokerIn(BaseModel):
     finds_trucks: bool
 
 
+class ClientIn(BaseModel):
+    premises_type: Literal["factory", "industrial", "bakery", "winery", "brewery", "farm", "warehouse", "mine", "retail", "other"]
+    goods_description: str = Field(min_length=10, max_length=500)
+    street_address: str = Field(min_length=5, max_length=255)
+    city: str = Field(min_length=2, max_length=100)
+    province: str | None = Field(default=None, max_length=100)
+    postal_code: str | None = Field(default=None, max_length=20)
+    owns_goods: bool
+
+    @field_validator("goods_description", "street_address", "city", "province", "postal_code", mode="before")
+    @classmethod
+    def strip_strings(cls, v):
+        if v is None:
+            return None
+        return str(v).strip()
+
+    @field_validator("owns_goods")
+    @classmethod
+    def must_own_goods(cls, v: bool) -> bool:
+        if not v:
+            raise ValueError("owns_goods must be true")
+        return v
+
+
 class OnboardingStartIn(BaseModel):
     email: EmailStr
 
@@ -113,13 +137,14 @@ class OnboardingStartIn(BaseModel):
 
 class CompanyOnboardingBase(BaseModel):
     company: CompanyIn
-    roles: list[Literal["transporter", "broker"]]
+    roles: list[Literal["transporter", "broker", "client"]]
     transporter: TransporterIn | None = None
     broker: BrokerIn | None = None
+    client: ClientIn | None = None
 
     @field_validator("roles")
     @classmethod
-    def validate_roles(cls, v: list[Literal["transporter", "broker"]]) -> list[Literal["transporter", "broker"]]:
+    def validate_roles(cls, v: list[Literal["transporter", "broker", "client"]]) -> list[Literal["transporter", "broker", "client"]]:
         if len(v) < 1 or len(v) > 2:
             raise ValueError("roles must have 1 to 2 items")
         if len(set(v)) != len(v):
@@ -129,6 +154,13 @@ class CompanyOnboardingBase(BaseModel):
     @model_validator(mode="after")
     def validate_role_profiles(self):
         roles_set = set(self.roles)
+        if "client" in roles_set:
+            if roles_set != {"client"}:
+                raise ValueError("client role cannot be combined with other roles")
+            if self.client is None:
+                raise ValueError("client profile required for client role")
+        elif self.client is not None:
+            raise ValueError("client profile not allowed for unselected role")
         if "transporter" in roles_set and self.transporter is None:
             raise ValueError("transporter profile required for transporter role")
         if "broker" in roles_set and self.broker is None:
