@@ -1,11 +1,18 @@
+import html
+import logging
+
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+from app.core.email import BrevoMailer
 from app.features.companies.models import Company, CompanyRole
 from app.features.loads.models import Load
 from app.features.loads.schemas import LoadCreate, LoadUpdate
 from app.features.users.model import User
+
+logger = logging.getLogger(__name__)
 
 STAFF_ROLES = ("admin", "director")
 
@@ -35,10 +42,62 @@ def client_scope(db: Session, user: User) -> int | None:
     return None
 
 
-def create_load(db: Session, body: LoadCreate, user: User) -> Load:
+def _esc(value) -> str:
+    return html.escape(str(value)) if value is not None else "-"
+
+
+def _load_email_html(load: Load, company: Company | None, user: User) -> str:
+    rows: list[tuple[str, str]] = [
+        ("Route", f"{load.origin} → {load.destination}"),
+        ("Commodity", load.commodity),
+        ("Truck type", load.truck_type),
+        ("Trucks needed", load.trucks_needed),
+        ("Rate per truck", f"{load.currency} {load.rate:,.2f}"),
+        ("Payment terms", load.payment_terms),
+        ("Pickup date", load.pickup_date.isoformat() if load.pickup_date else None),
+    ]
+    if load.backload_origin:
+        rate = f"{load.currency} {load.backload_rate:,.2f}" if load.backload_rate is not None else "-"
+        rows.append(("Backload", f"{load.backload_origin} → {load.backload_destination}, {load.backload_commodity} ({rate})"))
+    rows += [
+        ("Note", load.note),
+        ("Company", (company.trading_name or company.legal_name) if company else None),
+        ("Posted by", f"{user.full_name} <{user.email}>"),
+        ("Posted as", load.posted_as),
+        ("Load ID", load.id),
+    ]
+    tr = "".join(
+        '<tr>'
+        f'<td style="padding:6px 12px;border-bottom:1px solid #eee;color:#666;font-weight:600;white-space:nowrap">{_esc(k)}</td>'
+        f'<td style="padding:6px 12px;border-bottom:1px solid #eee">{_esc(v)}</td>'
+        "</tr>"
+        for k, v in rows
+    )
+    return (
+        '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222">'
+        f'<h2 style="margin:0 0 4px">New load #{load.id}</h2>'
+        '<p style="margin:0 0 16px;color:#666">A new load was posted on CargoFlow Africa.</p>'
+        f'<table style="border-collapse:collapse;background:#fafafa;border:1px solid #eee">{tr}</table>'
+        '<p style="margin:16px 0 0;color:#999;font-size:12px">Log in to the platform to review it and apply your margins.</p>'
+        "</div>"
+    )
+
+
+def _notify_directors(load: Load, company: Company | None, user: User, mailer: BrevoMailer) -> None:
+    recipients = [e.strip() for e in settings.LOAD_NOTIFICATION_EMAILS.split(",") if e.strip()]
+    if not recipients:
+        return
+    subject = f"New load #{load.id}: {load.origin} → {load.destination}"
+    content = _load_email_html(load, company, user)
+    for email in recipients:
+        mailer.send_background(to_email=email, subject=subject, html_content=content)
+
+
+def create_load(db: Session, body: LoadCreate, user: User, mailer: BrevoMailer) -> Load:
     if _is_staff(user):
         company_id = body.company_id
-        if company_id is not None and not db.get(Company, company_id):
+        company = db.get(Company, company_id) if company_id is not None else None
+        if company_id is not None and not company:
             raise HTTPException(404, "Company not found.")
         posted_as = _posted_as(_company_roles(db, company_id)) if company_id is not None else "staff"
     else:
@@ -58,6 +117,10 @@ def create_load(db: Session, body: LoadCreate, user: User) -> Load:
     db.add(load)
     db.commit()
     db.refresh(load)
+    try:
+        _notify_directors(load, company, user, mailer)
+    except Exception:
+        logger.exception("Failed to queue director notification for load #%s", load.id)
     return load
 
 

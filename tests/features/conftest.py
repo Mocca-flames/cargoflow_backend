@@ -5,9 +5,23 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
 from app.core.database import Base, get_db
+from app.core.email import get_mailer
 from app.main import app
 
 TEST_DB = "cargo_flow_test"
+
+
+class _NoopMailer:
+    """Tests must never hit Brevo."""
+
+    def __init__(self):
+        self.background_tasks = None
+
+    async def send(self, **kwargs):
+        return {}
+
+    def send_background(self, **kwargs):
+        pass
 
 
 def _url(db_name: str) -> str:
@@ -50,6 +64,7 @@ def client(db):
         yield db
 
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_mailer] = _NoopMailer
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()

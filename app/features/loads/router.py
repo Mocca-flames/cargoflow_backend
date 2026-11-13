@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_active_user
+from app.core.email import BrevoMailer, get_mailer
 from app.features.loads import service
 from app.features.loads.schemas import LoadCreate, LoadOut, LoadUpdate, PublicLoadOut
 from app.features.users.model import User
@@ -15,8 +16,9 @@ def create_load(
     body: LoadCreate,
     db: Session = Depends(get_db),
     user: User = Depends(get_active_user),
+    mailer: BrevoMailer = Depends(get_mailer),
 ):
-    return service.create_load(db, body, user)
+    return service.create_load(db, body, user, mailer)
 
 
 @router.get("", response_model=list[LoadOut])

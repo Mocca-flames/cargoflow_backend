@@ -15,6 +15,9 @@ class Settings(BaseSettings):
 
     BREVO_API_KEY: str = ''
 
+    # Directors get a copy of every new load by email (comma-separated).
+    LOAD_NOTIFICATION_EMAILS: str = 'info@cargoflowafrica.co.za,info@cargoflowafrica.co.bw'
+
     UPLOAD_DIR: str = '/data/uploads'
     MAX_UPLOAD_BYTES: int = 10 * 1024 * 1024
     ALLOWED_UPLOAD_TYPES: dict[str, list[str]] = {
