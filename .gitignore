@@ -13,3 +13,12 @@ __pycache__/
 get_token.sh
 make_device_token.py
 fake.pdf
+
+# dev scratch notes and test scripts
+.kilo/
+append_doc.py
+d.md
+d2.txt
+director_admin_endpoints.md
+temp_doc.md
+tests/features/test_companies_list.py
