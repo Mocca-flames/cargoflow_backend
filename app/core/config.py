@@ -29,8 +29,12 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = 'production'
     SKIP_OTP: bool = False
 
-    # Comma-separated browser origins allowed to call the API
-    CORS_ORIGINS: str = 'http://localhost:3000'
+    # Comma-separated exact browser origins allowed to call the API
+    CORS_ORIGINS: str = 'http://localhost:3000,http://localhost:5173'
+
+    # Regex for additional allowed origins (fullmatch against the Origin header).
+    # Matches https://cargoflowafrica.co.za, https://*.cargoflowafrica.co.za and the .co.bw equivalents.
+    CORS_ORIGIN_REGEX: str = r'https://([a-z0-9-]+\.)*cargoflowafrica\.co\.(za|bw)'
 
 
 settings = Settings()
