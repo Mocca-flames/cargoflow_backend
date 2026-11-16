@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -13,12 +15,15 @@ router = APIRouter(prefix="/companies", tags=["companies"])
 @router.get("", response_model=list[CompanyListItem])
 def list_companies(
     status: str | None = None,
+    role: Literal["transporter", "broker", "client"] | None = Query(
+        None, description="Only companies holding this role"
+    ),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     _=Depends(require_role("admin", "director")),
 ):
-    return service.list_companies(db, status, limit, offset)
+    return service.list_companies(db, status, limit, offset, role)
 
 
 @router.post("/{company_id}/verify", response_model=CompanyReviewOut)

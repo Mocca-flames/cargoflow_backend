@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.features.companies.models import Company
+from app.features.companies.models import Company, CompanyRole
 from app.features.documents.models import CompanyDocument, DocumentType
 from app.features.users.model import User
 from app.features.companies.schemas import (
@@ -16,10 +16,14 @@ from app.features.companies.schemas import (
 )
 
 
-def list_companies(db: Session, status: str | None, limit: int, offset: int) -> list[CompanyListItem]:
+def list_companies(
+    db: Session, status: str | None, limit: int, offset: int, role: str | None = None
+) -> list[CompanyListItem]:
     q = select(Company).options(selectinload(Company.roles)).order_by(Company.created_at.desc())
     if status:
         q = q.where(Company.status == status)
+    if role:
+        q = q.where(Company.roles.any(CompanyRole.role == role))
     rows = db.scalars(q.limit(limit).offset(offset)).all()
     return [
         CompanyListItem(
