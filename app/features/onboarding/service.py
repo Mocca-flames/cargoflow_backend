@@ -130,23 +130,35 @@ def staff_submit(db: Session, body: StaffOnboardingIn, creator: User, mailer: Br
     try:
         company = _add_company(db, body)
         if owner:
-            temp_password = secrets.token_urlsafe(9)
-            user = User(
-                email=owner.email,
-                phone=owner.phone,
-                full_name=owner.full_name,
-                password_hash=hash_password(temp_password),
-                company_id=company.id,
-                must_change_password=True,
-                created_by=creator.id,
-            )
+            if body.owner_password:
+                temp_password = None
+                user = User(
+                    email=owner.email,
+                    phone=owner.phone,
+                    full_name=owner.full_name,
+                    password_hash=hash_password(body.owner_password),
+                    company_id=company.id,
+                    must_change_password=False,
+                    created_by=creator.id,
+                )
+            else:
+                temp_password = secrets.token_urlsafe(9)
+                user = User(
+                    email=owner.email,
+                    phone=owner.phone,
+                    full_name=owner.full_name,
+                    password_hash=hash_password(temp_password),
+                    company_id=company.id,
+                    must_change_password=True,
+                    created_by=creator.id,
+                )
             db.add(user)
         db.commit()
     except IntegrityError:
         db.rollback()
         raise HTTPException(409, "This company, email or phone is already registered.")
 
-    if user:
+    if user and temp_password:
         mailer.send_background(
             to_email=user.email,
             to_name=user.full_name,

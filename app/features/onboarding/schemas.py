@@ -181,11 +181,17 @@ class OnboardingSubmitIn(CompanyOnboardingBase):
 class StaffOnboardingIn(CompanyOnboardingBase):
     owner: OwnerIn | None = None
     create_owner: bool = False
+    owner_password: str | None = Field(default=None, min_length=8)
 
     @model_validator(mode="after")
     def validate_create_owner(self):
         if self.create_owner and self.owner is None:
             raise ValueError("owner required when create_owner is True")
+        if self.owner_password is not None:
+            if self.owner is None:
+                raise ValueError("owner required when owner_password is provided")
+            if not self.create_owner:
+                raise ValueError("create_owner must be True when owner_password is provided")
         return self
 
 
